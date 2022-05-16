@@ -23,14 +23,14 @@ namespace PruebaTecnica.Infrastructure
         public virtual DbSet<Movimiento> Movimientos { get; set; }
         public virtual DbSet<Persona> Personas { get; set; }
 
-//        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//        {
-//            if (!optionsBuilder.IsConfigured)
-//            {
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-//                optionsBuilder.UseSqlServer("Server=localhost,1433; Database=PruebaTecnica; User=sa; Password=abc123..;");
-//            }
-//        }
+        //        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //        {
+        //            if (!optionsBuilder.IsConfigured)
+        //            {
+        //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+        //                optionsBuilder.UseSqlServer("Server=localhost,1433; Database=PruebaTecnica; User=sa; Password=abc123..;");
+        //            }
+        //        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,10 +38,17 @@ namespace PruebaTecnica.Infrastructure
 
             modelBuilder.Entity<Cliente>(entity =>
             {
+                entity.HasKey(e => e.PersonaId)
+                    .HasName("Cliente_PK");
+
                 entity.ToTable("Cliente");
 
-                entity.HasIndex(e => e.PersonaId, "Cliente_UN")
+                entity.HasIndex(e => e.ClienteId, "Cliente_UN")
                     .IsUnique();
+
+                entity.Property(e => e.PersonaId).ValueGeneratedNever();
+
+                entity.Property(e => e.ClienteId).ValueGeneratedOnAdd();
 
                 entity.Property(e => e.Contrasenia)
                     .IsRequired()
@@ -51,13 +58,16 @@ namespace PruebaTecnica.Infrastructure
                     .WithOne(p => p.Cliente)
                     .HasForeignKey<Cliente>(d => d.PersonaId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Cliente_FK");
+                    .HasConstraintName("FK__Cliente__Persona__59063A47");
             });
 
             modelBuilder.Entity<Cuentum>(entity =>
             {
                 entity.HasKey(e => e.CuentaId)
                     .HasName("Cuenta_PK");
+
+                entity.HasIndex(e => e.NumeroCuenta, "Cuenta_UN")
+                    .IsUnique();
 
                 entity.Property(e => e.NumeroCuenta)
                     .IsRequired()
@@ -71,6 +81,7 @@ namespace PruebaTecnica.Infrastructure
 
                 entity.HasOne(d => d.Cliente)
                     .WithMany(p => p.Cuenta)
+                    .HasPrincipalKey(p => p.ClienteId)
                     .HasForeignKey(d => d.ClienteId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("Cuenta_FK");

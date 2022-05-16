@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PruebaTecnica.Core.Dtos.Clientes
+namespace PruebaTecnica.Core.Values
 {
-    public class EliminarClienteDto
+    public enum ECodigoRespuesta
     {
-        public string Identificacion { get; set; }
+        OK = 0,
+        ERROR = -1
     }
 }

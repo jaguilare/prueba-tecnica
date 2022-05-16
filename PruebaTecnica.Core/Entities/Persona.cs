@@ -16,7 +16,6 @@ namespace PruebaTecnica.Core
         public string Direccion { get; set; }
         public string Telefono { get; set; }
 
-        [JsonIgnore]
         public virtual Cliente Cliente { get; set; }
     }
 }

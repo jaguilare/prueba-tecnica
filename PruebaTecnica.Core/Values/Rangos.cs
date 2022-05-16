@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PruebaTecnica.Core.Dtos.App
+namespace PruebaTecnica.Core.Values
 {
-    public enum ECodigoRespuesta
+    public static class Rangos
     {
-        OK = 0,
-        ERROR = -1
+        public const int LIMITE_DOLARES_DIARIO_TRANSACCIONAL = 1000;
     }
 }

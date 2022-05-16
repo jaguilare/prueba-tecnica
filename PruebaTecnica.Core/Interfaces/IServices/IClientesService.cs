@@ -6,9 +6,9 @@ namespace PruebaTecnica.Core.Interfaces.Services
 {
     public interface IClientesService
     {
-        public Task<Respuesta> Consultar(string identificacion);
+        public Task<Respuesta> Consultar(ConsultarClienteDto dto);
         public Task<Respuesta> Crear(CrearClienteDto dto);
-        public Task<Respuesta> Actualizar(Persona dto);
-        public Task<Respuesta> Eliminar(Persona dto);
+        public Task<Respuesta> Actualizar(ActualizarClienteDto dto);
+        public Task<Respuesta> Eliminar(EliminarClienteDto dto);
     }
 }

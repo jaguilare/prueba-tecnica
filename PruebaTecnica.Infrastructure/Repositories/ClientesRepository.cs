@@ -1,5 +1,4 @@
 ﻿
-using PruebaTecnica.Core;
 using PruebaTecnica.Core.Interfaces.IRepositories;
 using System;
 using System.Threading.Tasks;
@@ -7,6 +6,7 @@ using System.Transactions;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using PruebaTecnica.Core;
 
 namespace PruebaTecnica.Infrastructure.Repositories
 {
@@ -19,12 +19,29 @@ namespace PruebaTecnica.Infrastructure.Repositories
         {
             _dbContext = dbContext;
         }
+
         public Cliente Actualizar(Cliente dto)
         {
-            throw new NotImplementedException();
+            using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Required,
+                new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+                TransactionScopeAsyncFlowOption.Enabled
+            ))
+            {
+                try
+                {
+                    _dbContext.Entry(dto).State = EntityState.Modified;
+                    scope.Complete();
+                    return dto;
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine($"Actualizar() => {exc}");
+                    throw new Exception(exc.ToString());
+                }
+            }
         }
 
-        public async Task<IList<Cliente>> Consultar(string identificacion)
+        public async Task<Cliente> Consultar(string identificacion)
         {
             using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Required,
                 new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
@@ -36,11 +53,25 @@ namespace PruebaTecnica.Infrastructure.Repositories
                     var query = from pers in _dbContext.Personas
                                 join clis in _dbContext.Clientes on pers.PersonaId equals clis.PersonaId
                                 where pers.Identificacion == identificacion
-                                select new Cliente { PersonaId = pers.PersonaId };
-
-                    var clientes = await query.AsQueryable().ToListAsync();
+                                select new Cliente
+                                {
+                                    PersonaId = clis.PersonaId,
+                                    ClienteId = clis.ClienteId,
+                                    Estado = clis.Estado,
+                                    Persona = new Persona()
+                                    {
+                                        PersonaId = pers.PersonaId,
+                                        Direccion = pers.Direccion,
+                                        Edad = pers.Edad,
+                                        Genero = pers.Genero,
+                                        Identificacion = pers.Identificacion,
+                                        Nombre = pers.Nombre,
+                                        Telefono = pers.Telefono
+                                    },
+                                };
+                    var cliente = await query.FirstOrDefaultAsync();
                     scope.Complete();
-                    return clientes;
+                    return cliente;
                 }
                 catch (Exception exc)
                 {
@@ -48,7 +79,6 @@ namespace PruebaTecnica.Infrastructure.Repositories
                     throw new Exception(exc.ToString());
                 }
             }
-
         }
 
         public Cliente Crear(Cliente dto)
@@ -72,12 +102,27 @@ namespace PruebaTecnica.Infrastructure.Repositories
             }
         }
 
-        public Cliente Eliminar(Cliente dto)
+        public void Eliminar(int personaId)
         {
-            throw new NotImplementedException();
+            using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Required,
+                new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+                TransactionScopeAsyncFlowOption.Enabled
+            ))
+            {
+                try
+                {
+                    _dbContext.Entry(new Cliente() { PersonaId = personaId }).State = EntityState.Deleted;
+                    scope.Complete();
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine($"Eliminar() => {exc}");
+                    throw new Exception(exc.ToString());
+                }
+            }
         }
 
-        public async Task<int> GuardarCambiosOk()
+        public async Task<int> Guardar()
         {
             using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Required,
                 new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
@@ -92,7 +137,7 @@ namespace PruebaTecnica.Infrastructure.Repositories
                 }
                 catch (Exception exc)
                 {
-                    Console.WriteLine($"GuardarCambiosOk() => {exc}");
+                    Console.WriteLine($"Guardar() => {exc}");
                     throw new Exception(exc.ToString());
                 }
             }

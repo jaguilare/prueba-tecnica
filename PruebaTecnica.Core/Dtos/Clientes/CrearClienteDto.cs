@@ -13,5 +13,20 @@ namespace PruebaTecnica.Core.Dtos.Clientes
         public Persona Persona { get; set; }
         public Cliente Cliente { get; set; }
 
+        public static object Response(Persona persona, Cliente cliente)
+        {
+            var o = new { 
+                Persona = new {
+                    PersonaId = persona.PersonaId
+                },
+                Cliente = new
+                {
+                    ClienteId = cliente.ClienteId
+                },
+            };
+            return o;
+        }
+
+
     }
 }

@@ -1,7 +1,7 @@
 ﻿using PruebaTecnica.Core;
 using PruebaTecnica.Core.Dtos.App;
 using PruebaTecnica.Core.Dtos.Clientes;
-using PruebaTecnica.Core.Dtos.Values;
+using PruebaTecnica.Core.Values;
 using PruebaTecnica.Core.Interfaces.IRepositories;
 using PruebaTecnica.Core.Interfaces.Services;
 using System;
@@ -16,7 +16,12 @@ namespace PruebaTecnica.Application.Services
     public class ClientesService : IClientesService
     {
 
-        private readonly IPersonasRepository _personaRepository;
+        private Persona _persona;
+        private Cliente _cliente;
+        private string _mensajeRespuesta;
+        private ECodigoRespuesta _codigoRespuesta;
+
+        private readonly IPersonasRepository _personasRepository;
         private readonly IClientesRepository _clientesRepository;
 
 
@@ -25,50 +30,35 @@ namespace PruebaTecnica.Application.Services
             IClientesRepository clienesRepository
             )
         {
-            _personaRepository = personaRepository;
+            _mensajeRespuesta = MensajesRespuesta.OK;
+            _codigoRespuesta = ECodigoRespuesta.OK;
+            _personasRepository = personaRepository;
             _clientesRepository = clienesRepository;
         }
 
-        public async Task<Respuesta> Consultar(string identificacion)
+        public async Task<Respuesta> Consultar(ConsultarClienteDto dto)
         {
-            Persona persona = null;
-            string mensajeRespuesta = MensajesRespuesta.OK;
-            ECodigoRespuesta codigoRespuesta = ECodigoRespuesta.OK;
-
-            using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Required,
-                new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
-                TransactionScopeAsyncFlowOption.Enabled
-            ))
+            try
             {
-                try
-                {
-                    persona = await _personaRepository.Consultar(identificacion);
+                _cliente = await _clientesRepository.Consultar(dto.Identificacion);
 
-                    if (persona is null)
-                    {
-                        codigoRespuesta = ECodigoRespuesta.ERROR;
-                        mensajeRespuesta = MensajesRespuesta.ERROR;
-                    }
-                }
-                catch (Exception exc)
+                if (_cliente is null)
                 {
-                    Console.WriteLine($"Consultar() => {exc}");
-                    codigoRespuesta = ECodigoRespuesta.ERROR;
-                    mensajeRespuesta = MensajesRespuesta.ERROR;
+                    _mensajeRespuesta = MensajesRespuesta.CLIENTE_NO_ENCONTRADO;
                 }
             }
+            catch (Exception exc)
+            {
+                Console.WriteLine($"Consultar() => {exc}");
+                _codigoRespuesta = ECodigoRespuesta.ERROR;
+                _mensajeRespuesta = MensajesRespuesta.ERROR;
+            }
 
-            return new Respuesta(mensajeRespuesta, codigoRespuesta, persona);
-
+            return new Respuesta(_mensajeRespuesta, _codigoRespuesta, ConsultarClienteDto.Response(_cliente));
         }
 
         public async Task<Respuesta> Crear(CrearClienteDto dto)
         {
-            Persona persona = null;
-            Cliente cliente = null;
-            string mensajeRespuesta = MensajesRespuesta.OK;
-            ECodigoRespuesta codigoRespuesta = ECodigoRespuesta.OK;
-
             using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Required,
                 new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
                 TransactionScopeAsyncFlowOption.Enabled
@@ -76,52 +66,116 @@ namespace PruebaTecnica.Application.Services
             {
                 try
                 {
-                    //persona = await _personaRepository.Consultar(dto.Persona.Identificacion);
-                    IList<Cliente> clientes = await _clientesRepository.Consultar(dto.Persona.Identificacion);
-                    cliente = clientes.FirstOrDefault();
+                    _cliente = await _clientesRepository.Consultar(dto.Persona.Identificacion);
 
-                    if (cliente is null)
+                    if (_cliente is null)
                     {
-                        persona = _personaRepository.Crear(dto.Persona);
-                        int personasAfectadas = await _personaRepository.GuardarCambiosOk();
+                        _persona = _personasRepository.Crear(dto.Persona);
+                        int personasAfectadas = await _personasRepository.Guardar();
 
-                        dto.Cliente.PersonaId = persona.PersonaId;
-                        cliente = _clientesRepository.Crear(dto.Cliente);
-
-                        int clientesAfectados = await _clientesRepository.GuardarCambiosOk();
+                        dto.Cliente.PersonaId = _persona.PersonaId;
+                        _cliente = _clientesRepository.Crear(dto.Cliente);
+                        int clientesAfectados = await _clientesRepository.Guardar();
 
                         scope.Complete();
                     }
                     else
                     {
-                        cliente = null;
-                        codigoRespuesta = ECodigoRespuesta.ERROR;
-                        mensajeRespuesta = MensajesRespuesta.ERROR_PERSONA_YA_EXISTE;
+                        _cliente = null;
+                        _codigoRespuesta = ECodigoRespuesta.ERROR;
+                        _mensajeRespuesta = MensajesRespuesta.CLIENTE_YA_EXISTE;
                     }
                 }
                 catch (Exception exc)
                 {
-                    persona = null;
-                    cliente = null;
-                    Console.WriteLine($"Consultar() => {exc}");
-                    codigoRespuesta = ECodigoRespuesta.ERROR;
-                    mensajeRespuesta = MensajesRespuesta.ERROR;
+                    _cliente = null;
+                    Console.WriteLine($"Crear() => {exc}");
+                    _codigoRespuesta = ECodigoRespuesta.ERROR;
+                    _mensajeRespuesta = MensajesRespuesta.ERROR;
                 }
             }
 
-            return new Respuesta(mensajeRespuesta, codigoRespuesta, new { persona, cliente });
+            return new Respuesta(_mensajeRespuesta, _codigoRespuesta, CrearClienteDto.Response(_persona, _cliente));
         }
 
-        public Task<Respuesta> Actualizar(Persona dto)
+        public async Task<Respuesta> Actualizar(ActualizarClienteDto dto)
         {
-            throw new NotImplementedException();
+            using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Required,
+                new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+                TransactionScopeAsyncFlowOption.Enabled
+            ))
+            {
+                try
+                {
+                    _cliente = await _clientesRepository.Consultar(dto.Persona.Identificacion);
+
+                    if (_cliente is not null)
+                    {
+                        _clientesRepository.Actualizar(dto.Cliente);
+                        int clientesAfectados = await _clientesRepository.Guardar();
+
+                        _personasRepository.Actualizar(dto.Persona);
+                        int personasAfectadas = await _personasRepository.Guardar();
+
+                        scope.Complete();
+                    }
+                    else
+                    {
+                        _codigoRespuesta = ECodigoRespuesta.ERROR;
+                        _mensajeRespuesta = MensajesRespuesta.CLIENTE_NO_ENCONTRADO;
+                    }
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine($"Actualizar() => {exc}");
+                    _codigoRespuesta = ECodigoRespuesta.ERROR;
+                    _mensajeRespuesta = MensajesRespuesta.ERROR;
+                }
+            }
+
+            return new Respuesta(_mensajeRespuesta, _codigoRespuesta, null);
         }
 
 
 
-        public Task<Respuesta> Eliminar(Persona dto)
+        public async Task<Respuesta> Eliminar(EliminarClienteDto dto)
         {
-            throw new NotImplementedException();
+
+            using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Required,
+                new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+                TransactionScopeAsyncFlowOption.Enabled
+            ))
+            {
+                try
+                {
+                    _cliente = await _clientesRepository.Consultar(dto.Identificacion);
+
+                    if (_cliente is not null)
+                    {
+                        int personaId = _cliente.PersonaId;
+                        _clientesRepository.Eliminar(_cliente.PersonaId);
+                        int clientesAfectados = await _clientesRepository.Guardar();
+
+                        _personasRepository.Eliminar(personaId);
+                        int personasAfectadas = await _personasRepository.Guardar();
+
+                        scope.Complete();
+                    }
+                    else
+                    {
+                        _codigoRespuesta = ECodigoRespuesta.ERROR;
+                        _mensajeRespuesta = MensajesRespuesta.CLIENTE_NO_ENCONTRADO;
+                    }
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine($"Eliminar() => {exc}");
+                    _codigoRespuesta = ECodigoRespuesta.ERROR;
+                    _mensajeRespuesta = MensajesRespuesta.ERROR;
+                }
+            }
+
+            return new Respuesta(_mensajeRespuesta, _codigoRespuesta, null);
         }
 
     }

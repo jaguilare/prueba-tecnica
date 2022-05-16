@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PruebaTecnica.Core.Dtos.Clientes
+namespace PruebaTecnica.Core.Dtos.Movimientos
 {
-    public class EliminarClienteDto
+    public class ConsultarMovimientoDto
     {
-        public string Identificacion { get; set; }
     }
 }

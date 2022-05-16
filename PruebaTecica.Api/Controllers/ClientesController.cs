@@ -6,7 +6,7 @@ using PruebaTecnica.Core.Dtos.Clientes;
 using PruebaTecnica.Core.Interfaces.Services;
 using System.Threading.Tasks;
 
-namespace PruebaTecica.Api.Controllers
+namespace PruebaTecnica.Api.Controllers
 {
     [Route("[controller]")]
     [ApiController]
@@ -21,9 +21,30 @@ namespace PruebaTecica.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Respuesta>> CrearCliente(CrearClienteDto dto)
+        public async Task<ActionResult<Respuesta>> Crear(CrearClienteDto dto)
         {
             Respuesta respuesta = await _clientesService.Crear(dto);
+            return respuesta;
+        }
+
+        [HttpPut]
+        public async Task<ActionResult<Respuesta>> Actualizar(ActualizarClienteDto dto)
+        {
+            Respuesta respuesta = await _clientesService.Actualizar(dto);
+            return respuesta;
+        }
+
+        [HttpDelete]
+        public async Task<ActionResult<Respuesta>> Eliminar(EliminarClienteDto dto)
+        {
+            Respuesta respuesta = await _clientesService.Eliminar(dto);
+            return respuesta;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<Respuesta>> Consultar([FromQuery] ConsultarClienteDto dto)
+        {
+            Respuesta respuesta = await _clientesService.Consultar(dto);
             return respuesta;
         }
 

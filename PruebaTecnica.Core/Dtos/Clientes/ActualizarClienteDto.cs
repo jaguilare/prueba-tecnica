@@ -8,5 +8,7 @@ namespace PruebaTecnica.Core.Dtos.Clientes
 {
     public class ActualizarClienteDto
     {
+        public Persona Persona { get; set; }
+        public Cliente Cliente { get; set; }
     }
 }

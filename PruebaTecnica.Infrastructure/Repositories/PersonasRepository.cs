@@ -27,15 +27,50 @@ namespace PruebaTecnica.Infrastructure.Repositories
             {
                 try
                 {
-                    var p = await _dbContext.Personas.FirstOrDefaultAsync(p => p.Identificacion == identificacion);
+                    var persona = await _dbContext.Personas.FirstOrDefaultAsync(p => p.Identificacion == identificacion);
                     scope.Complete();
-                    return p;
+                    return persona;
                 }
                 catch (Exception exc)
                 {
                     Console.WriteLine($"Consultar() => {exc}");
                     throw new Exception(exc.ToString());
                 }
+            }
+        }
+
+        public async Task<Persona> ConsultarPersonaCliente(string identificacion)
+        {
+
+            try
+            {
+                var query = from pers in _dbContext.Personas
+                            join clis in _dbContext.Clientes on pers.PersonaId equals clis.PersonaId
+                            where pers.Identificacion == identificacion
+                            select new Persona
+                            {
+                                PersonaId = pers.PersonaId,
+                                Identificacion = pers.Identificacion,
+                                Nombre = pers.Nombre,
+                                Edad = pers.Edad,
+                                Genero = pers.Genero,
+                                Telefono = pers.Telefono,
+                                Direccion = pers.Direccion,
+                                Cliente = new Cliente()
+                                {
+                                    ClienteId = clis.ClienteId,
+                                    PersonaId = pers.PersonaId,
+                                    Contrasenia = clis.Contrasenia,
+                                    Estado = clis.Estado
+                                }
+                            };
+                var clientes = await query.AsQueryable().ToListAsync();
+                return clientes.FirstOrDefault();
+            }
+            catch (Exception exc)
+            {
+                Console.WriteLine($"Consultar() => {exc}");
+                throw new Exception(exc.ToString());
             }
         }
 
@@ -69,9 +104,9 @@ namespace PruebaTecnica.Infrastructure.Repositories
             {
                 try
                 {
-                    var p = _dbContext.Personas.Update(dto);
+                    _dbContext.Entry(dto).State = EntityState.Modified;
                     scope.Complete();
-                    return p.Entity;
+                    return dto;
                 }
                 catch (Exception exc)
                 {
@@ -81,7 +116,7 @@ namespace PruebaTecnica.Infrastructure.Repositories
             }
         }
 
-        public Persona Eliminar(Persona dto)
+        public void Eliminar(int personaId)
         {
             using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Required,
                 new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
@@ -90,9 +125,8 @@ namespace PruebaTecnica.Infrastructure.Repositories
             {
                 try
                 {
-                    var p = _dbContext.Personas.Remove(dto);
+                    _dbContext.Entry(new Persona() { PersonaId = personaId }).State = EntityState.Deleted;
                     scope.Complete();
-                    return p.Entity;
                 }
                 catch (Exception exc)
                 {
@@ -102,7 +136,7 @@ namespace PruebaTecnica.Infrastructure.Repositories
             }
         }
 
-        public async Task<int> GuardarCambiosOk()
+        public async Task<int> Guardar()
         {
             using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Required,
                 new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
@@ -117,7 +151,7 @@ namespace PruebaTecnica.Infrastructure.Repositories
                 }
                 catch (Exception exc)
                 {
-                    Console.WriteLine($"GuardarCambiosOk() => {exc}");
+                    Console.WriteLine($"Guardar() => {exc}");
                     throw new Exception(exc.ToString());
                 }
             }

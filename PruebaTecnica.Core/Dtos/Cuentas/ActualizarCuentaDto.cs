@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PruebaTecnica.Core.Dtos.Clientes
+namespace PruebaTecnica.Core.Dtos.Request.Cuentas
 {
-    public class EliminarClienteDto
+    public class ActualizarCuentaDto
     {
-        public string Identificacion { get; set; }
+        public Cuentum Cuenta { get; set; }
     }
 }
