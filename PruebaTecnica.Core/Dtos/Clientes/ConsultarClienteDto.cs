@@ -12,6 +12,7 @@ namespace PruebaTecnica.Core.Dtos.Clientes
 
         public static object Response(Cliente cliente)
         {
+            if(cliente is null) { return null; }
             var o = new
             {
                 Persona = new

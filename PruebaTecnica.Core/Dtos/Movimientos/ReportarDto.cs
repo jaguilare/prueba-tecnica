@@ -37,26 +37,5 @@ namespace PruebaTecnica.Core.Dtos.Movimientos
         }
 
 
-        //public static object Response(IList<Movimiento> mvts)
-        //{
-        //    List<object> l = new List<object>();
-
-        //    foreach (var m in mvts)
-        //    {
-        //        l.Add(new
-        //        {
-        //            Movimiento = new
-        //            {
-        //                MovimientoId = m.MovimientosId,
-        //                CuentaId = m.CuentaId,
-        //                TipoMovimiento = m.TipoMovimiento,
-        //                Fecha = m.Fecha,
-        //                Valor = m.Valor,
-        //                Saldo = m.Saldo
-        //            }
-        //        });
-        //    }
-        //    return l;
-        //}
     }
 }

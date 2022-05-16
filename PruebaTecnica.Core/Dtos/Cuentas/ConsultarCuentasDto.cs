@@ -12,6 +12,8 @@ namespace PruebaTecnica.Core.Dtos.Request.Cuentas
 
         public static object Response(IList<Cuentum> cuenta)
         {
+            if (cuenta is null) { return null; }
+
             List<object> l = new List<object>();
 
             foreach (var c in cuenta)

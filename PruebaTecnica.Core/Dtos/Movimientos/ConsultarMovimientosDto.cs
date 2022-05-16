@@ -12,6 +12,8 @@ namespace PruebaTecnica.Core.Dtos.Movimientos
 
         public static object Response(IList<Movimiento> mvts)
         {
+            if (mvts is null) { return null; }
+
             List<object> l = new List<object>();
 
             foreach (var m in mvts)

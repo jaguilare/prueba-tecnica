@@ -12,6 +12,8 @@ namespace PruebaTecnica.Core.Dtos.Movimientos
 
         public static object Response(Movimiento movimiento)
         {
+            if (movimiento is null) { return null; }
+
             var o = new
             {
                 Movimiento = new
